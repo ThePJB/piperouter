@@ -4,15 +4,18 @@ mod djikstra_solver;
 mod fast_solver;
 mod endpoint;
 mod priority_queue;
+mod voxel;
+mod mesh;
 
 use math::*;
+use voxel::*;
 use std::{fs::OpenOptions, process};
-use stl_io::*;
 use ordered_float::*;
 
-use crate::djikstra_solver::*;
+use crate::fast_solver::*;
+use crate::mesh::*;
+use crate::mesh::IndexedMesh;
 use crate::endpoint::*;
-use crate::ant_solver::*;
 
 // anyway so maybe it wouldn't be so hard to do a basic pathfinding that explored in straight lines first
 // so its ranking search by generation
@@ -24,20 +27,10 @@ use crate::ant_solver::*;
 
 fn main() {
     std::env::set_var("RUST_BACKTRACE", "1");
-    let mut file = OpenOptions::new().read(true).open("Volume.stl").unwrap();
-    let stl = read_stl(&mut file).unwrap();
-    
-    let tris: Vec<Tri> = stl.faces.iter().map(|face| Tri {
-        normal: v3(face.normal[0], face.normal[1], face.normal[2]),
-        i1: face.vertices[0],
-        i2: face.vertices[1],
-        i3: face.vertices[2],
-    }).collect();
 
-    let verts: Vec<V3> = stl.vertices.iter().map(|vert| v3(vert[0], vert[1], vert[2])).collect();
+    let mesh = IndexedMesh::from_file("Volume.stl");
 
-
-    let endpoints = find_endpoints(&verts, &tris);
+    let endpoints = find_endpoints(&mesh.verts, &mesh.tris);
     // dbg!(&endpoints);
 
     // ok so we up to here. goddamn find endpoints is working
@@ -45,7 +38,6 @@ fn main() {
     // now we need to try the thing
 
     // dimensions in meters
-    let U_TO_M = 3.6429696;
     let dim_u = v3(1.75, 2.5, 1.5);
     let dim_m = dim_u * U_TO_M;
     let voxel_s = 0.01;
@@ -56,7 +48,7 @@ fn main() {
 
     let mut voxels = vec![0; dim_vox.0*dim_vox.1*dim_vox.2];
 
-    let z_triangles: Vec<Tri> = tris.iter().filter(|tri| tri.normal.dot(v3(0.0, 0.0, 1.0)) != 0.0).map(|x| *x).collect();
+    let z_triangles: Vec<Tri> = mesh.tris.iter().filter(|tri| tri.normal.dot(v3(0.0, 0.0, 1.0)) != 0.0).map(|x| *x).collect();
 
     for i in 0..dim_vox.0 {
         for j in 0..dim_vox.1 {
@@ -68,9 +60,9 @@ fn main() {
             let ray_dir = v3(0.0, 0.0, -1.0);
             let mut intersections = Vec::new();
             for tri in z_triangles.iter() {
-                let v0 = verts[tri.i1];
-                let v1 = verts[tri.i2];
-                let v2 = verts[tri.i3];
+                let v0 = mesh.verts[tri.i1];
+                let v1 = mesh.verts[tri.i2];
+                let v2 = mesh.verts[tri.i3];
                 if let Some(d_inter) = ray_triangle_intersection(ray_origin, ray_dir, v0, v1, v2) {
                     intersections.push(OrderedFloat(d_inter - ray_z_offset));
                 }
@@ -179,15 +171,28 @@ fn main() {
     // }
     // dbg!("done");
 
-    let mut solver = DjikstraSolver::new(dim_vox, voxel_endpoints, voxels);
+    let mut solver = FastSolver::new(dim_vox, voxel_endpoints, voxels);
     dbg!("begin");
     solver.solve_from(0);
     dbg!("done");
 
+    let npipe = solver.voxels.iter().filter(|x| **x == 2).count();
+    let tot = solver.voxels.len();
+    dbg!(npipe, tot, npipe as f32 / tot as f32);
 
     // I think pheromone needs to be per destination and directional
     // and ants need source and target
     // maybe it cant work in 3d because scourge of dimensionality, like the chance of them actually hitting the target is too low
     // or that it goes into suboptimal solution too quickly
 
+    let pipe_mesh = gen_pipe_mesh(solver.voxels, solver.dim, dim_u);
+    pipe_mesh.save("pipes.stl");
+    let combined_mesh = mesh.combine(&pipe_mesh);
+    combined_mesh.save("combined.stl");
 }
+
+
+// hmm it nearly correct
+// the discrepancy might be from the mesh-> voxels step
+// I could output a voxel mesh, probably go for a low res one tho otherwise itll be utterly cooked
+// and probably should neighbour check to omit quads as well

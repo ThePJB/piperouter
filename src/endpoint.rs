@@ -1,4 +1,6 @@
 use crate::math::*;
+use crate::mesh::*;
+
 use std::collections::HashSet;
 
 #[derive(Debug)]
@@ -14,14 +16,6 @@ pub struct VoxelEndpoint {
     pub nx: isize,
     pub ny: isize,
     pub nz: isize,
-}
-
-#[derive(Debug, Clone, Copy)]
-pub struct Tri {
-    pub normal: V3,
-    pub i1: usize,
-    pub i2: usize,
-    pub i3: usize,
 }
 
 // computes the endpoint positions and normals from an indexed mesh
