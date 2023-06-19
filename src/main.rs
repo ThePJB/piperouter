@@ -1,35 +1,21 @@
 mod math;
-mod ant_solver;
-mod djikstra_solver;
 mod fast_solver;
-mod endpoint;
-mod priority_queue;
 mod voxel;
 mod mesh;
 
 use math::*;
 use voxel::*;
-use std::{fs::OpenOptions, process};
 
 use crate::fast_solver::*;
 use crate::mesh::*;
 use crate::mesh::IndexedMesh;
-use crate::endpoint::*;
-
-// anyway so maybe it wouldn't be so hard to do a basic pathfinding that explored in straight lines first
-// so its ranking search by generation
-// could ant shit work? maybe
-
-
-// maybe theres potential for a heuristic by raycasting on the geometry
-
 
 fn main() {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     let mesh = IndexedMesh::from_file("Volume.stl");
 
-    let endpoints = find_endpoints(&mesh.verts, &mesh.tris);
+    let endpoints = mesh.find_endpoints();
     // dbg!(&endpoints);
 
     // ok so we up to here. goddamn find endpoints is working
@@ -49,7 +35,7 @@ fn main() {
     // doesnt really matter anyway
     // let hole_voxel_coords: Vec<(usize, usize, usize)> = endpoints.iter().map(|x| x.pos + 0.001*x.normal).map(|v| (((v.x / dim_u.x) * vx_x as f32) as usize, ((v.y / dim_u.y) * vx_y as f32) as usize, ((v.z / dim_u.z) * vx_z as f32) as usize)).collect();
 
-    // lets print out the endpoints
+    // lets print out the endpoints 
     dbg!(&dim_u);
     dbg!(&endpoints);
 
@@ -107,7 +93,7 @@ fn main() {
     // }
     // dbg!("done");
 
-    let voxel_mesh = gen_wall_mesh(&voxels, dim_vox, dim_u);
+    let voxel_mesh = gen_mesh(&voxels, dim_vox, dim_u, 1);
     voxel_mesh.save("voxmesh.stl");
 
     let mut solver = FastSolver::new(dim_vox, voxel_endpoints, voxels);
@@ -124,7 +110,7 @@ fn main() {
     // maybe it cant work in 3d because scourge of dimensionality, like the chance of them actually hitting the target is too low
     // or that it goes into suboptimal solution too quickly
 
-    let pipe_mesh = gen_pipe_mesh(solver.voxels, solver.dim, dim_u);
+    let pipe_mesh = gen_mesh(&solver.voxels, solver.dim, dim_u, 2);
     pipe_mesh.save("pipes.stl");
     let combined_mesh = mesh.combine(&pipe_mesh);
     combined_mesh.save("combined.stl");

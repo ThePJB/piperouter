@@ -1,4 +1,3 @@
-use crate::endpoint::*;
 use crate::voxel::*;
 use std::collections::VecDeque;
 
@@ -23,7 +22,6 @@ pub struct FastSolver {
     pub queues: Vec<VecDeque<Entry>>,
     pub queue_ind: usize,
 }
-
 
 impl FastSolver {
     pub fn new(dim: (usize, usize, usize), endpoints: Vec<VoxelEndpoint>, voxels: Vec<usize>) -> Self {

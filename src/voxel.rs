@@ -2,6 +2,15 @@ use crate::mesh::*;
 use crate::math::*;
 use ordered_float::*;
 
+pub struct VoxelEndpoint {
+    pub x: usize,
+    pub y: usize,
+    pub z: usize,
+    pub nx: isize,
+    pub ny: isize,
+    pub nz: isize,
+}
+
 pub const U_TO_M: f32 = 3.6429696;
 pub const VOXEL_S_M: f32 = 0.1;
 pub const VOXEL_S_U: f32 = VOXEL_S_M / U_TO_M;
@@ -16,13 +25,6 @@ pub fn vox_indi(pos: (isize, isize, isize), dim: (usize, usize, usize)) -> usize
 pub fn vox_ind_ok(pos: (isize, isize, isize), dim: (usize, usize, usize)) -> bool {
     pos.0 >= 0 && pos.1 >= 0 && pos.2 >= 0 &&
     (pos.0 as usize) < dim.0 && (pos.1 as usize) < dim.1 && (pos.2 as usize) < dim.2
-}
-pub fn vox_indi_option(pos: (isize, isize, isize), dim: (usize, usize, usize)) -> Option<usize> {
-    if vox_ind_ok(pos, dim) {
-        Some(vox_indi(pos, dim))
-    } else {
-        None
-    }
 }
 
 pub struct Voxels {
