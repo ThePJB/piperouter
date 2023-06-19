@@ -24,8 +24,11 @@ fn main() {
     let dim_u = mesh.get_dims();
     println!("[{:?}] Computed mesh extent {:?}", Instant::now().duration_since(tstart), dim_u);
     
-    let voxels = Voxels::from_mesh(&mesh, dim_u);
+    let mut voxels = Voxels::from_mesh(&mesh, dim_u);
     println!("[{:?}] Generated voxels from mesh ({} voxels)", Instant::now().duration_since(tstart), voxels.voxels.len());
+    
+    voxels.dilate();
+    println!("[{:?}] Finish dilating walls)", Instant::now().duration_since(tstart));
 
     let dim_vox = voxels.dim;
 
@@ -55,6 +58,10 @@ fn main() {
     let pipe_mesh = solver.voxels.to_mesh(dim_u, 2);
     pipe_mesh.save("pipes.stl");
     println!("[{:?}] Generated output pipe mesh", Instant::now().duration_since(tstart));
+
+    // voxels to materials
+    // first record then delete junctions
+    // then calculate the different 4con segments and those are the pipe segments
 
     // let combined_mesh = mesh.combine(&pipe_mesh);
     // combined_mesh.save("combined.stl");

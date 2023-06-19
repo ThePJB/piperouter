@@ -13,7 +13,7 @@ pub struct VoxelEndpoint {
 }
 
 pub const U_TO_M: f32 = 3.6429696;
-pub const VOXEL_S_M: f32 = 0.01;
+pub const VOXEL_S_M: f32 = 0.01;    // 0.1 -- 309582 voxels, 11.1ms. 0.01 -- 316499820 voxels, 11.6s
 pub const VOXEL_S_U: f32 = VOXEL_S_M / U_TO_M;
 
 pub struct Voxels {
@@ -35,6 +35,13 @@ impl Voxels {
     pub fn get_unchecked_u(&self, pos: (usize, usize, usize)) -> u8 {
         let idx = self.get_idx_unchecked_u(pos);
         self.voxels[idx]
+    }
+    pub fn get_opt_i(&self, pos: (isize, isize, isize)) -> Option<u8> {
+        if self.pos_in_bounds_i(pos) {
+            Some(self.get_unchecked_i(pos))
+        } else {
+            None
+        }
     }
     pub fn pos_in_bounds_i(&self, pos: (isize, isize, isize)) -> bool {
         pos.0 >= 0 && pos.1 >= 0 && pos.2 >= 0 &&
@@ -95,6 +102,61 @@ impl Voxels {
         }
 
         Voxels { voxels, dim: dim_vox }
+    }
+
+    // you would call this multiple times to account for pipe radius or clearance
+    // but you would have to ensure that the straight line from the endpoints wouldnt be overwritten
+    // issue: top actually has no voxels so pipe will still hug it
+    // also, if we encased the whole thing in voxels we could skip bounds checking in pathfinding for a big speedup
+    pub fn dilate(&mut self) {
+        // 2 passes - set to 3 then set 3s to 1s
+        // a single pass would propagate 1s in direction of traversal and im avoiding allocating more
+        for i in 0..self.dim.0 {
+            for j in 0..self.dim.1 {
+                for k in 0..self.dim.2 {
+                    let idx = self.get_idx_unchecked_u((i,j,k));
+                    if self.voxels[idx] == 1 {
+                        continue;
+                    }
+                    if let Some(val) = self.get_opt_i((i as isize + 1, j as isize, k as isize)) {
+                        if val == 1 {
+                            self.voxels[idx] = 3;
+                        }
+                    }
+                    if let Some(val) = self.get_opt_i((i as isize - 1, j as isize, k as isize)) {
+                        if val == 1 {
+                            self.voxels[idx] = 3;
+                        }
+                    }
+                    if let Some(val) = self.get_opt_i((i as isize, j as isize + 1, k as isize)) {
+                        if val == 1 {
+                            self.voxels[idx] = 3;
+                        }
+                    }
+                    if let Some(val) = self.get_opt_i((i as isize, j as isize - 1, k as isize)) {
+                        if val == 1 {
+                            self.voxels[idx] = 3;
+                        }
+                    }
+                    if let Some(val) = self.get_opt_i((i as isize, j as isize, k as isize + 1)) {
+                        if val == 1 {
+                            self.voxels[idx] = 3;
+                        }
+                    }
+                    if let Some(val) = self.get_opt_i((i as isize, j as isize, k as isize - 1)) {
+                        if val == 1 {
+                            self.voxels[idx] = 3;
+                        }
+                    }
+                }
+            }
+        }
+
+        for idx in 0..self.voxels.len() {
+            if self.voxels[idx] == 3 {
+                self.voxels[idx] = 1;
+            }
+        }
     }
 
     // Constructs an indexed mesh of voxels denoted by voxel_value

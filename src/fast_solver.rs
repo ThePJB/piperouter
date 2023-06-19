@@ -13,6 +13,7 @@ pub struct FastSolver {
     pub endpoint_inds: Vec<usize>,
 
     // this could be packed into a single byte each if you wanted to
+    // one backpointer per voxel
     pub backpointers: Vec<Option<(i8, i8, i8)>>,
 
     pub queues: Vec<VecDeque<Entry>>,
@@ -59,10 +60,8 @@ impl FastSolver {
                 break;
             }
             if let Some(entry) = self.queues[self.queue_ind].pop_front() {
-                // let ind = self.voxels.get_idx_unchecked_i(entry.pos);
-                // assert!(self.voxels.voxels[ind] != 1);
-                // check and push front
-                // not oob, wall, or prev
+                // Check next voxel going forward
+                // Check its not out of bounds, a wall, or already visited
                 let fwd_pos = (entry.pos.0 + entry.dir.0 as isize, entry.pos.1 + entry.dir.1 as isize, entry.pos.2 + entry.dir.2 as isize);
                 if self.voxels.pos_in_bounds_i(fwd_pos) {
                     let fwd_idx = self.voxels.get_idx_unchecked_i(fwd_pos);
@@ -74,6 +73,9 @@ impl FastSolver {
                         self.backpointers[fwd_idx] = Some((-entry.dir.0, -entry.dir.1, -entry.dir.2));
                     }
                 }
+
+                // Same as before but check each voxel going orthogonally
+                // They are lower priority which is why they get put in the next queue (queue ind + 1)
                 let orthogonal_dirs = orthogonal_dirs(entry.dir);
                 for n_dir in orthogonal_dirs {
                     let n_pos = (entry.pos.0 + n_dir.0 as isize, entry.pos.1 + n_dir.1 as isize, entry.pos.2 + n_dir.2 as isize);
@@ -92,6 +94,7 @@ impl FastSolver {
                     }
                 }
             } else {
+                // Search excausted for this queue i.e this amount of turns
                 self.queue_ind += 1;
             }
         }

@@ -29,6 +29,7 @@ impl IndexedMesh {
         let mut file = OpenOptions::new().read(true).open(path).unwrap();
         let stl = stl_io::read_stl(&mut file).unwrap();
         
+        // Convert from their types to our types
         let tris: Vec<Tri> = stl.faces.iter().map(|face| Tri {
             normal: v3(face.normal[0], face.normal[1], face.normal[2]),
             i1: face.vertices[0],
@@ -83,19 +84,20 @@ impl IndexedMesh {
         let tris = &self.tris;
 
         // Step 1: Determine endpoints
-        // Triangles of the endpoints other than the endcap (slanty triangles) will have non cardinally aligned normals. Test for this is N^2 != |N|
-        // These triangles will index either vertices of the endcap or vertices of the hole we wish to plug in the geometry. The centroid of the hole will yield the final location.
-        // We collect the indexes on the endpoint triangles.
-        // We wish to partition these indexes into endcap and hole. Such that we may delete endcap and plug hole. After deleting slanty triangles, there will exist triangles between endcap indices while there will not exist triangles between hole indices.
 
         // Find indices of slanty triangles
+        // Slanty Triangles are triangles with normals which do not point in a cardinal direction, this formula will discern them
         let slanty_triangles_indices: Vec<usize> = tris.iter().enumerate()
             .filter(|(idx, tri)| tri.normal * tri.normal != tri.normal.abs())
             .map(|(idx, tri)| idx)
             .collect();
 
-        // dbg!(slanty_triangles_indices);
+        // Here we compute this table of information about the endpoint vertices (width = number of endpoint vertices):
+        // endpoint_vert_index: Their index...
+        // endpoint_vert_which: Which endpoint they belong to...
+        // endpoint_vert_front: Whether they are a front vertex (around the hole) or not (around the back part)
 
+        // Endpoint vertices are all vertices referred to by the Slanty Triangles
         let endpoint_vert_index = {
             let mut endpoint_vert_index_set = HashSet::new();
             for i in slanty_triangles_indices.iter() {
@@ -107,7 +109,10 @@ impl IndexedMesh {
             endpoint_vert_index.sort();
             endpoint_vert_index
         };
+
+
         let endpoint_vert_which = {
+            // This algorithm combines the 'which' values of vertices until all vertices belonging to the same endpoint have the same 'which' value
             let mut endpoint_vert_which: Vec<usize> = (0..endpoint_vert_index.len()).collect();
             // go through triangles and if a triangle has multiple hole vertices then the holes will be reconciled
             for idx in slanty_triangles_indices.iter().copied() {
@@ -134,25 +139,10 @@ impl IndexedMesh {
             endpoint_vert_which
         };
 
-        // dbg!(&endpoint_vert_index.len());
-        // dbg!(&endpoint_vert_index);
-        // dbg!(&endpoint_vert_which.len());
-        // dbg!(&endpoint_vert_which);
-        // std::process::exit(0);
-
         let endpoint_vert_front = {
             let mut endpoint_vert_front = vec![true; endpoint_vert_index.len()];
-            // you're the front, but if youre touched by a ENDCAP TRIANGLE you get set to back
-            // ENDCAP TRIANGLES - triangles with all 3 vertices from the endpoint group
 
-            // so for each triangle, if all the points are contained within endpoint_vert_index, those points are not front(by index of their occurrence in the table)
-            // oh because its for each non slanty triangle
-
-            // so it be that the triangles are all ebing found false
-
-            // y dis wrong
-
-            // for over non slanty triangles
+            // so for each NON-SLANTY triangle, if all the verts are endpoint verts, those verts are not front
             for tri in tris.iter().filter(|tri| tri.normal*tri.normal == tri.normal.abs()) {
                 if let Some(idx1) = endpoint_vert_index.iter().position(|x| *x == tri.i1) {
                     if let Some(idx2) = endpoint_vert_index.iter().position(|x| *x == tri.i2) {
@@ -167,14 +157,7 @@ impl IndexedMesh {
             endpoint_vert_front
         };
 
-        // dbg!(&endpoint_vert_front.len());
-        // dbg!(&endpoint_vert_front);
-        // std::process::exit(0);
-
-        // now we would go by key
-        // and calculate resulting Vec<Endpoint> for return
-        let mut endpoints = Vec::new();
-
+        // get a list of the endpoint-keys that the endpoints ended up having (not just 0,1,2.. more like 0,5,9)
         let keys = {
             let mut keys = endpoint_vert_which.clone();
             keys.sort();
@@ -182,24 +165,27 @@ impl IndexedMesh {
             keys
         };
 
+        // the very same table but as a vec of triples for reasons
         let endpoint_vert_records: Vec<(usize, usize, bool)> = (0..endpoint_vert_index.len()).map(|i| (endpoint_vert_index[i], endpoint_vert_which[i], endpoint_vert_front[i])).collect();
-        // dbg!(&endpoint_vert_records.len());
-        // dbg!(&endpoint_vert_records);
-        // std::process::exit(0);
             
+        // return value
+        let mut endpoints = Vec::new();
+
         // for each distinct endpoint
         for key in keys {
-            // avg of front endpoints will be fold over vertex positions of this specific key
+            // avg of front vertices is the center of the front hole
             let avg_front = endpoint_vert_records.iter()
                 .filter(|(idx, which, front)| *which == key && *front == true)
                 .map(|(idx, _, _)| verts[*idx])
                 .fold(v3(0.0, 0.0, 0.0), |acc, v| acc + v) / 5.0;
 
+            // avg of back vertices is center of back face
             let avg_back = endpoint_vert_records.iter()
                 .filter(|(idx, which, front)| *which == key && *front == false)
                 .map(|(idx, _, _)| verts[*idx])
                 .fold(v3(0.0, 0.0, 0.0), |acc, v| acc + v) / 5.0;
 
+            // normal for endpoint given by (front - back) normalized
             endpoints.push(Endpoint {
                 pos: avg_front,
                 normal: (avg_front - avg_back).norm(),
