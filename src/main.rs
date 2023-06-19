@@ -37,9 +37,9 @@ fn main() {
             x: ((endpoint.pos.x + 0.001*endpoint.normal.x) * dim_vox.0 as f32 / dim_u.x) as usize,
             y: ((endpoint.pos.y + 0.001*endpoint.normal.y) * dim_vox.1 as f32 / dim_u.y) as usize,
             z: ((endpoint.pos.z + 0.001*endpoint.normal.z) * dim_vox.2 as f32 / dim_u.z) as usize,
-            nx: endpoint.normal.x.round() as isize,
-            ny: endpoint.normal.y.round() as isize,
-            nz: endpoint.normal.z.round() as isize,
+            nx: endpoint.normal.x.round() as i8,
+            ny: endpoint.normal.y.round() as i8,
+            nz: endpoint.normal.z.round() as i8,
         }
     }).collect();
     println!("[{:?}] Endpoints in voxel coordinates {:?}", Instant::now().duration_since(tstart), voxel_endpoints);
@@ -61,3 +61,6 @@ fn main() {
 }
 
 // uses like 14gb of ram lol
+// voxels are u8, down to 10gb
+// directions are i8, down to 2gb and also runs quicker
+

@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 
 pub struct Entry {
     pos: (isize, isize, isize),
-    dir: (isize, isize, isize),
+    dir: (i8, i8, i8),
 }
 
 pub struct FastSolver {
@@ -12,7 +12,8 @@ pub struct FastSolver {
     pub endpoints: Vec<VoxelEndpoint>,
     pub endpoint_inds: Vec<usize>,
 
-    pub backpointers: Vec<Option<(isize, isize, isize)>>,
+    // this could be reduced further obviously
+    pub backpointers: Vec<Option<(i8, i8, i8)>>,
 
     pub queues: Vec<VecDeque<Entry>>,
     pub queue_ind: usize,
@@ -63,7 +64,7 @@ impl FastSolver {
                 // assert!(self.voxels.voxels[ind] != 1);
                 // check and push front
                 // not oob, wall, or prev
-                let fwd_pos = (entry.pos.0 + entry.dir.0, entry.pos.1 + entry.dir.1, entry.pos.2 + entry.dir.2);
+                let fwd_pos = (entry.pos.0 + entry.dir.0 as isize, entry.pos.1 + entry.dir.1 as isize, entry.pos.2 + entry.dir.2 as isize);
                 if self.voxels.pos_in_bounds_i(fwd_pos) {
                     let fwd_idx = self.voxels.get_idx_unchecked_i(fwd_pos);
                     if self.voxels.voxels[fwd_idx] == 0 && self.backpointers[fwd_idx].is_none() {
@@ -76,7 +77,7 @@ impl FastSolver {
                 }
                 let orthogonal_dirs = orthogonal_dirs(entry.dir);
                 for n_dir in orthogonal_dirs {
-                    let n_pos = (entry.pos.0 + n_dir.0, entry.pos.1 + n_dir.1, entry.pos.2 + n_dir.2);
+                    let n_pos = (entry.pos.0 + n_dir.0 as isize, entry.pos.1 + n_dir.1 as isize, entry.pos.2 + n_dir.2 as isize);
                     if self.voxels.pos_in_bounds_i(n_pos) {
                         let n_idx = self.voxels.get_idx_unchecked_i(n_pos);
                         if self.voxels.voxels[n_idx] == 0 && self.backpointers[n_idx].is_none() {
@@ -109,7 +110,7 @@ impl FastSolver {
                         // found the start
                         break;
                     }
-                    pos = (pos.0 + dir.0, pos.1 + dir.1, pos.2 + dir.2);
+                    pos = (pos.0 + dir.0 as isize, pos.1 + dir.1 as isize, pos.2 + dir.2 as isize);
                 } else {
                     panic!("invalid trail");
                 }
@@ -119,7 +120,7 @@ impl FastSolver {
 }
 
 // Given a direction, the 4 directions that are at 90 degrees to it
-pub fn orthogonal_dirs(v: (isize, isize, isize)) -> [(isize, isize, isize); 4] {
+pub fn orthogonal_dirs(v: (i8, i8, i8)) -> [(i8, i8, i8); 4] {
     [
         (v.1, v.2, v.0),
         (-v.1, -v.2, -v.0),

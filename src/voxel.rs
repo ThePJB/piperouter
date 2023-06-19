@@ -7,9 +7,9 @@ pub struct VoxelEndpoint {
     pub x: usize,
     pub y: usize,
     pub z: usize,
-    pub nx: isize,
-    pub ny: isize,
-    pub nz: isize,
+    pub nx: i8,
+    pub ny: i8,
+    pub nz: i8,
 }
 
 pub const U_TO_M: f32 = 3.6429696;
@@ -29,7 +29,7 @@ pub const VOXEL_S_U: f32 = VOXEL_S_M / U_TO_M;
 // }
 
 pub struct Voxels {
-    pub voxels: Vec<usize>,
+    pub voxels: Vec<u8>,
     pub dim: (usize, usize, usize),
 }
 
@@ -40,11 +40,11 @@ impl Voxels {
     pub fn get_idx_unchecked_i(&self, pos: (isize, isize, isize)) -> usize {
         self.get_idx_unchecked_u((pos.0 as usize, pos.1 as usize, pos.2 as usize))
     }
-    pub fn get_unchecked_i(&self, pos: (isize, isize, isize)) -> usize {
+    pub fn get_unchecked_i(&self, pos: (isize, isize, isize)) -> u8 {
         let idx = self.get_idx_unchecked_i(pos);
         self.voxels[idx]
     }
-    pub fn get_unchecked_u(&self, pos: (usize, usize, usize)) -> usize {
+    pub fn get_unchecked_u(&self, pos: (usize, usize, usize)) -> u8 {
         let idx = self.get_idx_unchecked_u(pos);
         self.voxels[idx]
     }
@@ -113,7 +113,7 @@ impl Voxels {
     // Constructs an indexed mesh of voxels denoted by voxel_value
     // e.g. 0 would be all air, 1 would be all walls, 2 would be all pipes
     // rudimentary mesh optimization only (occluded quads not added)
-    pub fn to_mesh(&self, dim_u: V3, voxel_value: usize) -> IndexedMesh {
+    pub fn to_mesh(&self, dim_u: V3, voxel_value: u8) -> IndexedMesh {
         let dim = self.dim;
 
         let mut verts = Vec::new();
@@ -129,14 +129,14 @@ impl Voxels {
                     if self.get_unchecked_u((i,j,k)) == voxel_value {
                         // push verts and tris
                         let corner = v3(i as f32 / dim.0 as f32 * dim_u.x, j as f32 / dim.1 as f32 * dim_u.y, k as f32 / dim.2 as f32 * dim_u.z);
-                        verts.push(corner); // -8
-                        verts.push(corner + vi);
-                        verts.push(corner + vj);
-                        verts.push(corner + vi + vj);
-                        verts.push(vk + corner);
-                        verts.push(vk + corner + vi);
-                        verts.push(vk + corner + vj);   // -2
-                        verts.push(vk + corner + vi + vj); // -1
+                        verts.push(corner);                 // -8
+                        verts.push(corner + vi);            // -7
+                        verts.push(corner + vj);            // -6
+                        verts.push(corner + vi + vj);       // -5
+                        verts.push(vk + corner);            // -4
+                        verts.push(vk + corner + vi);       // -3
+                        verts.push(vk + corner + vj);       // -2
+                        verts.push(vk + corner + vi + vj);  // -1
                         let mi = verts.len();
                         // -z quad
                         if !self.pos_in_bounds_i((i as isize, j as isize, k as isize - 1)) || self.get_unchecked_u((i, j, k-1)) != voxel_value {
