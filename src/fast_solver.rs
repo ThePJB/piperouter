@@ -21,11 +21,11 @@ pub struct FastSolver {
 }
 
 impl FastSolver {
-    pub fn new(voxels: Voxels, endpoints: Vec<VoxelEndpoint>) -> Self {
+    pub fn new(voxels: Voxels, endpoints: &Vec<VoxelEndpoint>) -> Self {
         let len = voxels.voxels.len();
         let endpoint_inds = endpoints.iter().map(|endpoint| (endpoint.x, endpoint.y, endpoint.z)).map(|pos| voxels.get_idx_unchecked_u(pos)).collect();
         FastSolver {
-            endpoints,
+            endpoints: endpoints.clone(),
             voxels,
             backpointers: vec![None; len],
             endpoint_inds,
