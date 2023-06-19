@@ -13,7 +13,7 @@ pub struct VoxelEndpoint {
 }
 
 pub const U_TO_M: f32 = 3.6429696;
-pub const VOXEL_S_M: f32 = 0.1;    // 0.1 -- 309582 voxels, 11.1ms. 0.01 -- 316499820 voxels, 11.6s
+pub const VOXEL_S_M: f32 = 0.01;    // 0.1 -- 309582 voxels, 11.1ms. 0.01 -- 316499820 voxels, 11.6s
 pub const VOXEL_S_U: f32 = VOXEL_S_M / U_TO_M;
 
 pub struct Voxels {
