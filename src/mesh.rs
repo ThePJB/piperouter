@@ -207,6 +207,36 @@ impl IndexedMesh {
         }
         endpoints
     }
+
+    // get span of geometry EXCLUDING endpoint markers
+    pub fn get_dims(&self) -> V3 {
+        let mut dim_max = v3(-f32::INFINITY, -f32::INFINITY, -f32::INFINITY);
+        let mut dim_min = v3(f32::INFINITY, f32::INFINITY, f32::INFINITY);
+        
+        
+        // Find indices of slanty triangles
+        let slanty_triangles_indices: Vec<usize> = self.tris.iter().enumerate()
+                .filter(|(idx, tri)| tri.normal * tri.normal != tri.normal.abs())
+                .map(|(idx, tri)| idx)
+                .collect();
+        
+        // Set of vertices to ignore in bounds calculation
+        let mut endpoint_vert_index_set = HashSet::new();
+        for i in slanty_triangles_indices.iter().copied() {
+            endpoint_vert_index_set.insert(self.tris[i].i1);
+            endpoint_vert_index_set.insert(self.tris[i].i2);
+            endpoint_vert_index_set.insert(self.tris[i].i3);
+        }
+
+        for (i, vert) in self.verts.iter().copied().enumerate() {
+            if !endpoint_vert_index_set.contains(&i) {
+                dim_max = dim_max.max(vert);
+                dim_min = dim_min.min(vert);
+            }
+        }
+        
+        dim_max - dim_min
+    }
 }
 
 // Makes a mesh of voxels denoted by voxel_value

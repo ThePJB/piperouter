@@ -53,7 +53,7 @@ impl FastSolver {
                 return;
             }
             if self.endpoint_inds.iter().map(|x| self.backpointers[*x]).all(|x| x.is_some()) {
-                dbg!("finished -- success", self.queue_ind);
+                // dbg!("finished -- success", self.queue_ind);
                 break;
             }
             if let Some(entry) = self.queues[self.queue_ind].pop_front() {

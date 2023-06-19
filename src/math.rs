@@ -82,11 +82,25 @@ impl V3 {
     pub fn norm(&self) -> V3 {
         *self / self.dot(*self).sqrt()
     }
-    fn cross(self, other: V3) -> V3 {
+    pub fn cross(self, other: V3) -> V3 {
         V3 {
             x: self.y * other.z - self.z * other.y,
             y: self.z * other.x - self.x * other.z,
             z: self.x * other.y - self.y * other.x,
+        }
+    }
+    pub fn min(self, other: V3) -> V3 {
+        V3 {
+            x: self.x.min(other.x),
+            y: self.y.min(other.y),
+            z: self.z.min(other.z),
+        }
+    }
+    pub fn max(self, other: V3) -> V3 {
+        V3 {
+            x: self.x.max(other.x),
+            y: self.y.max(other.y),
+            z: self.z.max(other.z),
         }
     }
 }

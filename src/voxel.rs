@@ -2,6 +2,7 @@ use crate::mesh::*;
 use crate::math::*;
 use ordered_float::*;
 
+#[derive(Debug)]
 pub struct VoxelEndpoint {
     pub x: usize,
     pub y: usize,
@@ -59,10 +60,6 @@ impl Voxels {
                     }
                 }
                 intersections.sort();
-    
-                if i == 0 && j == 0 {
-                    dbg!(intersections.clone());
-                }
     
                 // now make the voxels themselves
                 // project from the top and if passing through an odd number of triangles, empty otherwise filled. (Normally it would be the reverse but this volume denotes empty space)
