@@ -1,0 +1,15 @@
+[17.3µs] Piperouter starting
+[483.6µs] Loaded mesh Volume.stl
+[523.2µs] Computed endpoints [Endpoint { pos: V3 [0.49999943 1.8999996 0.5], normal: V3 [0 0.000001192094 1] }, Endpoint { pos: V3 [0.49999943 0.5999994 0.5], normal: V3 [0 -0.0000008940705 1] }, Endpoint { pos: V3 [1.75 1.2499996 0.2500004], normal: V3 [-1 0 0] }]
+[549µs] Computed mesh extent V3 [1.75 2.5 1.5]
+[579.9786ms] Generated voxels from mesh (316499820 voxels)
+[1.4179596s] Finish dilating walls)
+[1.4180178s] Endpoints in voxel coordinates [VoxelEndpoint { x: 181, y: 691, z: 182, nx: 0, ny: 0, nz: 1 }, VoxelEndpoint { x: 181, y: 218, z: 182, nx: 0, ny: 0, nz: 1 }, VoxelEndpoint { x: 636, y: 454, z: 91, nx: -1, ny: 0, nz: 0 }]
+[1.4180368s] Begin pathfinding
+[10.959489s] Finish pathfinding
+[11.1096472s] Generated output pipe mesh
+Schedule of materials:
+Total pipe length: 27.789999m
+Elbows: 12
+T junctions: 0
+[13.2929861s] Finished schedule of materials
