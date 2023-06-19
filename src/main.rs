@@ -30,7 +30,6 @@ fn main() {
     println!("[{:?}] Generated voxels from mesh ({} voxels)", Instant::now().duration_since(tstart), voxels.voxels.len());
 
     let dim_vox = voxels.dim;
-    let voxels = voxels.voxels;
 
     // Convert endpoints in model units to endpoints in voxel coordinates
     let voxel_endpoints: Vec<VoxelEndpoint> = endpoints.iter().map(|endpoint| {
@@ -49,14 +48,16 @@ fn main() {
     // voxel_mesh.save("voxmesh.stl");
 
     println!("[{:?}] Begin pathfinding", Instant::now().duration_since(tstart));
-    let mut solver = FastSolver::new(dim_vox, voxel_endpoints, voxels);
+    let mut solver = FastSolver::new(voxels, voxel_endpoints);
     solver.solve_from(0);
     println!("[{:?}] Finish pathfinding", Instant::now().duration_since(tstart));
 
-    let pipe_mesh = gen_mesh(&solver.voxels, solver.dim, dim_u, 2);
+    let pipe_mesh = solver.voxels.to_mesh(dim_u, 2);
     pipe_mesh.save("pipes.stl");
     println!("[{:?}] Generated output pipe mesh", Instant::now().duration_since(tstart));
 
     // let combined_mesh = mesh.combine(&pipe_mesh);
     // combined_mesh.save("combined.stl");
 }
+
+// uses like 14gb of ram lol
