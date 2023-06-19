@@ -12,7 +12,7 @@ pub struct FastSolver {
     pub endpoints: Vec<VoxelEndpoint>,
     pub endpoint_inds: Vec<usize>,
 
-    // this could be reduced further obviously
+    // this could be packed into a single byte each if you wanted to
     pub backpointers: Vec<Option<(i8, i8, i8)>>,
 
     pub queues: Vec<VecDeque<Entry>>,
@@ -52,8 +52,7 @@ impl FastSolver {
 
         loop {
             if self.queue_ind >= self.queues.len() {
-                dbg!("finishing -- exhausted all queues", self.queue_ind);
-                return;
+                panic!("finishing -- exhausted all queues {}", self.queue_ind);
             }
             if self.endpoint_inds.iter().map(|x| self.backpointers[*x]).all(|x| x.is_some()) {
                 // dbg!("finished -- success", self.queue_ind);
@@ -98,7 +97,7 @@ impl FastSolver {
         }
 
         // Ok now its done -- backpointers have been set
-        // Now starting at the ends, follow backpointers and set voxels to 2 until theres one with backptr of 0,0,0 - thats the start
+        // Now starting at the ends, follow backpointers and set voxels to 2 (pipe) until theres one with backptr of 0,0,0 - thats the start
         for endpoint in self.endpoints.iter() {
             let mut pos = (endpoint.x as isize, endpoint.y as isize, endpoint.z as isize);
             loop {

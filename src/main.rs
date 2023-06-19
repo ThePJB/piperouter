@@ -3,12 +3,10 @@ mod fast_solver;
 mod voxel;
 mod mesh;
 
-use math::*;
 use voxel::*;
 use std::time::Instant;
 
 use crate::fast_solver::*;
-use crate::mesh::*;
 use crate::mesh::IndexedMesh;
 
 fn main() {
@@ -52,15 +50,17 @@ fn main() {
     solver.solve_from(0);
     println!("[{:?}] Finish pathfinding", Instant::now().duration_since(tstart));
 
+
+
     let pipe_mesh = solver.voxels.to_mesh(dim_u, 2);
     pipe_mesh.save("pipes.stl");
     println!("[{:?}] Generated output pipe mesh", Instant::now().duration_since(tstart));
 
     // let combined_mesh = mesh.combine(&pipe_mesh);
     // combined_mesh.save("combined.stl");
+
+    // todo voxel mesh dilate
+    // todo output 
+    // Output a schedule of material, consisting of the count, length, total number
+    // of units for each pipe, and connection required
 }
-
-// uses like 14gb of ram lol
-// voxels are u8, down to 10gb
-// directions are i8, down to 2gb and also runs quicker
-
