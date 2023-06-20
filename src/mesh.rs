@@ -114,7 +114,7 @@ impl IndexedMesh {
         let endpoint_vert_which = {
             // This algorithm combines the 'which' values of vertices until all vertices belonging to the same endpoint have the same 'which' value
             let mut endpoint_vert_which: Vec<usize> = (0..endpoint_vert_index.len()).collect();
-            // go through triangles and if a triangle has multiple hole vertices then the holes will be reconciled
+            // go through triangles and if a triangle has multiple endpoint vertices then the endpoints will be reconciled
             for idx in slanty_triangles_indices.iter().copied() {
                 let tri = tris[idx];
                 // find positions of referent vertices in endpoints vec

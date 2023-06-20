@@ -52,7 +52,7 @@ impl Voxels {
     }
 
     // This algorithm casts rays down each column doing ray triangle intersections
-    // After an odd number of intersections its inside the mesh and an odd number of intersections its inside the mesh
+    // After an odd number of intersections its inside the mesh and an even number of intersections its outside the mesh
     // Inside the mesh is given a voxel value of 0 (air)
     // Outside the mesh is given a voxel value of 1 (wall)
     // (this is the inverse of what you would typically do)
